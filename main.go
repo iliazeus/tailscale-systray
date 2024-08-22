@@ -31,17 +31,12 @@ func main() {
 	systray.Run(onReady, nil)
 }
 
-func executable(command string) bool {
-	_, err := exec.LookPath(command)
-	return err == nil
-}
-
 func doConnectionControl(m *systray.MenuItem, verb string) {
 	for {
 		if _, ok := <-m.ClickedCh; !ok {
 			break
 		}
-		b, err := exec.Command("pkexec", "tailscale", verb).CombinedOutput()
+		b, err := exec.Command("tailscale", verb).CombinedOutput()
 		if err != nil {
 			beeep.Notify(
 				"Tailscale",
@@ -60,13 +55,8 @@ func onReady() {
 	mDisconnect := systray.AddMenuItem("Disconnect", "")
 	mDisconnect.Disable()
 
-	if executable("pkexec") {
-		go doConnectionControl(mConnect, "up")
-		go doConnectionControl(mDisconnect, "down")
-	} else {
-		mConnect.Hide()
-		mDisconnect.Hide()
-	}
+	go doConnectionControl(mConnect, "up")
+	go doConnectionControl(mDisconnect, "down")
 
 	systray.AddSeparator()
 
